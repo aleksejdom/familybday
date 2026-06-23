@@ -1,20 +1,22 @@
 export const dynamic = "force-dynamic";
 
-import { getDb } from "@/lib/db";
+import { query, initDb } from "@/lib/db";
 import { BirthdayPageClient } from "@/components/birthday-page-client";
 import { Birthday } from "@/components/edit-birthday-dialog";
 import { CalendarDays, Users, PartyPopper } from "lucide-react";
 
 async function getBirthdays(): Promise<Birthday[]> {
   try {
-    const db = await getDb();
-    const docs = await db.collection("geburtstage").find({}).sort({ monthDay: 1 }).toArray();
-    return docs.map((d) => ({
-      id: d._id.toString(),
-      Datum: d.Datum as string,
-      Name: d.Name as string,
-      Inhalt: d.Inhalt as string,
-      Old: d.Old as number,
+    await initDb();
+    const rows = await query<{ id: number; datum: string; name: string; inhalt: string; old: number }>(
+      "SELECT id, datum, name, inhalt, old FROM geburtstage ORDER BY month_day ASC"
+    );
+    return rows.map((r) => ({
+      id: r.id.toString(),
+      Datum: r.datum,
+      Name: r.name,
+      Inhalt: r.inhalt,
+      Old: r.old,
     }));
   } catch {
     return [];
