@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 
 const publicPaths = ["/sign-in", "/sign-up", "/api/auth"];
 
-export async function proxy(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isPublic =
@@ -13,11 +12,11 @@ export async function proxy(request: NextRequest) {
 
   if (isPublic) return NextResponse.next();
 
-  const session = await auth.api
-    .getSession({ headers: request.headers })
-    .catch(() => null);
+  const sessionCookie =
+    request.cookies.get("better-auth.session_token") ??
+    request.cookies.get("__Secure-better-auth.session_token");
 
-  if (!session) {
+  if (!sessionCookie?.value) {
     return NextResponse.redirect(new URL("/sign-in", request.url));
   }
 
