@@ -1,27 +1,28 @@
-import { MongoClient, Db } from "mongodb";
+import { Pool } from "pg";
 
-const uri = process.env.MONGODB_URI!;
-const dbName = process.env.MONGODB_DB ?? "bday";
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
 
-let client: MongoClient;
-let db: Db;
-
-declare global {
-  // eslint-disable-next-line no-var
-  var _mongoClient: MongoClient | undefined;
+export async function query<T extends Record<string, unknown>>(
+  text: string,
+  params?: unknown[]
+): Promise<T[]> {
+  const { rows } = await pool.query(text, params);
+  return rows as T[];
 }
 
-export async function getDb(): Promise<Db> {
-  if (db) return db;
-
-  if (!globalThis._mongoClient) {
-    globalThis._mongoClient = new MongoClient(uri);
-    await globalThis._mongoClient.connect();
-  }
-
-  client = globalThis._mongoClient;
-  db = client.db(dbName);
-  return db;
+export async function initDb(): Promise<void> {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS geburtstage (
+      id SERIAL PRIMARY KEY,
+      datum TEXT NOT NULL,
+      name TEXT NOT NULL,
+      inhalt TEXT NOT NULL,
+      old INTEGER NOT NULL,
+      month_day INTEGER NOT NULL
+    )
+  `);
 }
 
 export function calculateAge(dateString: string): number {

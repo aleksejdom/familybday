@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ObjectId } from "mongodb";
-import { getDb, calculateAge } from "@/lib/db";
+import { query, calculateAge } from "@/lib/db";
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    if (!ObjectId.isValid(id)) return NextResponse.json({ error: "Ungültige ID." }, { status: 400 });
+    const numId = parseInt(id, 10);
+    if (isNaN(numId)) return NextResponse.json({ error: "Ungültige ID." }, { status: 400 });
 
     const { datum, name, inhalt } = await req.json();
     if (!datum || !name?.trim() || !inhalt?.trim()) {
@@ -15,11 +15,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const age = calculateAge(datum);
     const d = new Date(datum);
     const monthDay = d.getMonth() * 100 + d.getDate();
-    const db = await getDb();
 
-    await db.collection("geburtstage").updateOne(
-      { _id: new ObjectId(id) },
-      { $set: { Datum: datum, Name: name.trim(), Inhalt: inhalt.trim(), Old: age, monthDay } }
+    await query(
+      "UPDATE geburtstage SET datum = $1, name = $2, inhalt = $3, old = $4, month_day = $5 WHERE id = $6",
+      [datum, name.trim(), inhalt.trim(), age, monthDay, numId]
     );
 
     return NextResponse.json({ id, Datum: datum, Name: name.trim(), Inhalt: inhalt.trim(), Old: age });
@@ -32,10 +31,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    if (!ObjectId.isValid(id)) return NextResponse.json({ error: "Ungültige ID." }, { status: 400 });
+    const numId = parseInt(id, 10);
+    if (isNaN(numId)) return NextResponse.json({ error: "Ungültige ID." }, { status: 400 });
 
-    const db = await getDb();
-    await db.collection("geburtstage").deleteOne({ _id: new ObjectId(id) });
+    await query("DELETE FROM geburtstage WHERE id = $1", [numId]);
 
     return NextResponse.json({ success: true });
   } catch (err) {
