@@ -13,13 +13,15 @@ interface Props {
 export function BirthdayPageClient({ initialData }: Props) {
   const [entries, setEntries] = useState<Birthday[]>(initialData);
 
+  const existingGroups = [...new Set(entries.map((e) => e.Gruppe).filter(Boolean))].sort() as string[];
+
   function handleAdded(entry: Birthday) {
     setEntries((prev) => [...prev, entry]);
   }
 
   return (
     <div className="space-y-8">
-      <BirthdayTable initialData={entries} />
+      <BirthdayTable initialData={entries} existingGroups={existingGroups} />
 
       <div className="glass rounded-2xl p-6 sm:p-8">
         <div className="flex items-center gap-2.5 mb-6">
@@ -28,7 +30,7 @@ export function BirthdayPageClient({ initialData }: Props) {
           </div>
           <h2 className="text-lg font-bold tracking-tight">Neuen Eintrag hinzufügen</h2>
         </div>
-        <AddBirthdayForm onAdded={handleAdded} />
+        <AddBirthdayForm existingGroups={existingGroups} onAdded={handleAdded} />
       </div>
     </div>
   );

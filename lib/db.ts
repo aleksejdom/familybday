@@ -20,9 +20,13 @@ export async function initDb(): Promise<void> {
       name TEXT NOT NULL,
       inhalt TEXT NOT NULL,
       old INTEGER NOT NULL,
-      month_day INTEGER NOT NULL
+      month_day INTEGER NOT NULL,
+      adresse TEXT NOT NULL DEFAULT '',
+      gruppe TEXT NOT NULL DEFAULT ''
     )
   `);
+  await pool.query(`ALTER TABLE geburtstage ADD COLUMN IF NOT EXISTS adresse TEXT NOT NULL DEFAULT ''`);
+  await pool.query(`ALTER TABLE geburtstage ADD COLUMN IF NOT EXISTS gruppe TEXT NOT NULL DEFAULT ''`);
 }
 
 export function calculateAge(dateString: string): number {

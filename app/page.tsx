@@ -8,8 +8,8 @@ import { CalendarDays, Users, PartyPopper } from "lucide-react";
 async function getBirthdays(): Promise<Birthday[]> {
   try {
     await initDb();
-    const rows = await query<{ id: number; datum: string; name: string; inhalt: string; old: number }>(
-      "SELECT id, datum, name, inhalt, old FROM geburtstage ORDER BY month_day ASC"
+    const rows = await query<{ id: number; datum: string; name: string; inhalt: string; old: number; adresse: string; gruppe: string }>(
+      "SELECT id, datum, name, inhalt, old, adresse, gruppe FROM geburtstage ORDER BY month_day ASC"
     );
     return rows.map((r) => ({
       id: r.id.toString(),
@@ -17,6 +17,8 @@ async function getBirthdays(): Promise<Birthday[]> {
       Name: r.name,
       Inhalt: r.inhalt,
       Old: r.old,
+      Adresse: r.adresse ?? "",
+      Gruppe: r.gruppe ?? "",
     }));
   } catch {
     return [];

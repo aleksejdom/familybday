@@ -4,19 +4,18 @@ import { query, initDb, calculateAge } from "@/lib/db";
 export async function GET() {
   try {
     await initDb();
-    const rows = await query<{ id: number; datum: string; name: string; inhalt: string; old: number }>(
-      "SELECT id, datum, name, inhalt, old FROM geburtstage ORDER BY month_day ASC"
+    const rows = await query<{ id: number; datum: string; name: string; inhalt: string; old: number; adresse: string; gruppe: string }>(
+      "SELECT id, datum, name, inhalt, old, adresse, gruppe FROM geburtstage ORDER BY month_day ASC"
     );
-
-    const entries = rows.map((r) => ({
+    return NextResponse.json(rows.map((r) => ({
       id: r.id.toString(),
       Datum: r.datum,
       Name: r.name,
       Inhalt: r.inhalt,
       Old: r.old,
-    }));
-
-    return NextResponse.json(entries);
+      Adresse: r.adresse ?? "",
+      Gruppe: r.gruppe ?? "",
+    })));
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: "Datenbankfehler" }, { status: 500 });
@@ -26,7 +25,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     await initDb();
-    const { datum, name, inhalt } = await req.json();
+    const { datum, name, inhalt, adresse = "", gruppe = "" } = await req.json();
 
     if (!datum || !name?.trim() || !inhalt?.trim()) {
       return NextResponse.json({ error: "Alle Felder sind erforderlich." }, { status: 400 });
@@ -36,7 +35,6 @@ export async function POST(req: NextRequest) {
       "SELECT id FROM geburtstage WHERE datum = $1 AND name = $2 AND inhalt = $3",
       [datum, name.trim(), inhalt.trim()]
     );
-
     if (existing.length > 0) {
       return NextResponse.json({ error: "Dieser Eintrag existiert bereits." }, { status: 409 });
     }
@@ -46,8 +44,8 @@ export async function POST(req: NextRequest) {
     const monthDay = d.getMonth() * 100 + d.getDate();
 
     const result = await query<{ id: number }>(
-      "INSERT INTO geburtstage (datum, name, inhalt, old, month_day) VALUES ($1, $2, $3, $4, $5) RETURNING id",
-      [datum, name.trim(), inhalt.trim(), age, monthDay]
+      "INSERT INTO geburtstage (datum, name, inhalt, old, month_day, adresse, gruppe) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id",
+      [datum, name.trim(), inhalt.trim(), age, monthDay, adresse.trim(), gruppe.trim()]
     );
 
     return NextResponse.json({
@@ -56,6 +54,8 @@ export async function POST(req: NextRequest) {
       Name: name.trim(),
       Inhalt: inhalt.trim(),
       Old: age,
+      Adresse: adresse.trim(),
+      Gruppe: gruppe.trim(),
     });
   } catch (err) {
     console.error(err);
