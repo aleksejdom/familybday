@@ -5,6 +5,9 @@ import { ThemeProvider } from "next-themes";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Toaster } from "@/components/ui/sonner";
 import { Cake } from "lucide-react";
+import { SignOutButton } from "@/components/sign-out-button";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -17,7 +20,9 @@ export const metadata: Metadata = {
   description: "Nie wieder einen Geburtstag vergessen – Geburtstagskalender by Domowets",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const session = await auth.api.getSession({ headers: await headers() }).catch(() => null);
+
   return (
     <html lang="de" className={`${jakarta.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full flex flex-col relative overflow-x-hidden">
@@ -49,7 +54,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   </span>
                 </div>
               </div>
-              <ThemeToggle />
+              <div className="flex items-center gap-3">
+                {session?.user && (
+                  <span className="hidden sm:block text-xs text-muted-foreground font-medium truncate max-w-[160px]">
+                    {session.user.email}
+                  </span>
+                )}
+                <ThemeToggle />
+                {session?.user && <SignOutButton />}
+              </div>
             </div>
           </header>
 
