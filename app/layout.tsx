@@ -8,6 +8,7 @@ import { Cake } from "lucide-react";
 import { SignOutButton } from "@/components/sign-out-button";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import Link from "next/link";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -56,9 +57,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               </div>
               <div className="flex items-center gap-3">
                 {session?.user && (
-                  <span className="hidden sm:block text-xs text-muted-foreground font-medium truncate max-w-[160px]">
-                    {session.user.email}
-                  </span>
+                  <>
+                    <span className="hidden sm:block text-xs text-muted-foreground font-medium truncate max-w-[160px]">
+                      {session.user.email}
+                    </span>
+                    <Link
+                      href="/change-password"
+                      className="hidden sm:block text-xs text-muted-foreground hover:text-primary transition-colors font-medium"
+                    >
+                      Passwort ändern
+                    </Link>
+                  </>
                 )}
                 <ThemeToggle />
                 {session?.user && <SignOutButton />}

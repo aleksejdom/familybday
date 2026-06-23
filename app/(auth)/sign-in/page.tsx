@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { signIn } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Cake, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,8 @@ import Link from "next/link";
 
 export default function SignInPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const passwordReset = searchParams.get("reset") === "1";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -50,6 +52,13 @@ export default function SignInPage() {
 
         <div className="glass rounded-2xl p-6 sm:p-8">
           <h2 className="text-lg font-bold mb-5">Anmelden</h2>
+          {passwordReset && (
+            <div className="mb-4 rounded-lg bg-green-500/10 border border-green-500/20 p-3">
+              <p className="text-sm text-green-700 dark:text-green-400 font-medium">
+                Passwort wurde zurückgesetzt. Melde dich jetzt an.
+              </p>
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="email" className="text-sm font-semibold">
@@ -81,7 +90,15 @@ export default function SignInPage() {
               />
             </div>
             {error && (
-              <p className="text-sm text-destructive font-medium">{error}</p>
+              <div className="grid gap-1">
+                <p className="text-sm text-destructive font-medium">{error}</p>
+                <Link
+                  href="/forgot-password"
+                  className="text-sm text-primary font-medium hover:underline"
+                >
+                  Passwort vergessen?
+                </Link>
+              </div>
             )}
             <Button
               type="submit"
