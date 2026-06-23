@@ -1,10 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { betterFetch } from "@better-fetch/fetch";
-
-interface Session {
-  session: { id: string; userId: string } | null;
-  user: { id: string; email: string } | null;
-}
+import { auth } from "@/lib/auth";
 
 const publicPaths = ["/sign-in", "/sign-up", "/api/auth"];
 
@@ -18,15 +13,11 @@ export async function proxy(request: NextRequest) {
 
   if (isPublic) return NextResponse.next();
 
-  const { data: session } = await betterFetch<Session>(
-    "/api/auth/get-session",
-    {
-      baseURL: request.nextUrl.origin,
-      headers: { cookie: request.headers.get("cookie") ?? "" },
-    }
-  );
+  const session = await auth.api
+    .getSession({ headers: request.headers })
+    .catch(() => null);
 
-  if (!session?.session) {
+  if (!session) {
     return NextResponse.redirect(new URL("/sign-in", request.url));
   }
 
