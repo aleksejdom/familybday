@@ -33,6 +33,23 @@ function daysUntilBirthday(dateString: string): number {
   return Math.ceil((next.getTime() - today.getTime()) / 86400000);
 }
 
+const PALETTE = [
+  { badge: "bg-blue-500/15 border border-blue-500/30 text-blue-600 dark:text-blue-400" },
+  { badge: "bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400" },
+  { badge: "bg-violet-500/15 border border-violet-500/30 text-violet-600 dark:text-violet-400" },
+  { badge: "bg-rose-500/15 border border-rose-500/30 text-rose-600 dark:text-rose-400" },
+  { badge: "bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400" },
+  { badge: "bg-cyan-500/15 border border-cyan-500/30 text-cyan-600 dark:text-cyan-400" },
+  { badge: "bg-orange-500/15 border border-orange-500/30 text-orange-600 dark:text-orange-400" },
+  { badge: "bg-pink-500/15 border border-pink-500/30 text-pink-600 dark:text-pink-400" },
+];
+
+function paletteFor(name: string) {
+  let hash = 0;
+  for (const c of name) hash = (hash * 31 + c.charCodeAt(0)) & 0xfffffff;
+  return PALETTE[hash % PALETTE.length];
+}
+
 function ageOnNextBirthday(dateString: string): number {
   const today = new Date();
   const birth = new Date(dateString);
@@ -105,19 +122,30 @@ export default async function Home() {
             </span>
           </div>
           <ul className="space-y-2">
-            {soonList.map((b) => (
-              <li key={b.id} className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className="shrink-0 w-14 text-center text-xs font-bold text-primary bg-primary/10 rounded-lg py-1">
-                    {b.days === 1 ? "morgen" : `${b.days}T`}
+            {soonList.map((b) => {
+              const pal = b.Gruppe ? paletteFor(b.Gruppe) : null;
+              return (
+                <li key={b.id} className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="shrink-0 w-14 text-center text-xs font-bold text-primary bg-primary/10 rounded-lg py-1">
+                      {b.days === 1 ? "morgen" : `${b.days}T`}
+                    </span>
+                    <div className="flex flex-col min-w-0">
+                      <span className="font-medium truncate">{b.Name}</span>
+                      {b.Gruppe && pal && (
+                        <span className={`inline-flex items-center gap-1 self-start mt-0.5 rounded-full px-2 py-0.5 text-[10px] font-semibold ${pal.badge}`}>
+                          <Users className="h-2.5 w-2.5" />
+                          {b.Gruppe}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <span className="shrink-0 text-sm text-muted-foreground">
+                    wird {b.turnsAge}
                   </span>
-                  <span className="font-medium truncate">{b.Name}</span>
-                </div>
-                <span className="shrink-0 text-sm text-muted-foreground">
-                  wird {b.turnsAge}
-                </span>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         </div>
       )}
