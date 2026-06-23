@@ -3,7 +3,7 @@
 import { useState, Fragment } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2, Cake, Calendar, MapPin, Users } from "lucide-react";
+import { Pencil, Trash2, Cake, Calendar, MapPin, Users, ChevronDown, ChevronRight } from "lucide-react";
 import { EditBirthdayDialog, Birthday } from "@/components/edit-birthday-dialog";
 import { toast } from "sonner";
 
@@ -75,6 +75,15 @@ export function BirthdayTable({ initialData, existingGroups }: Props) {
   const [entries, setEntries] = useState<Birthday[]>(initialData);
   const [editing, setEditing] = useState<Birthday | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+
+  function toggleGroup(name: string) {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      next.has(name) ? next.delete(name) : next.add(name);
+      return next;
+    });
+  }
 
   async function handleDelete(id: string) {
     if (!confirm("Diesen Eintrag wirklich löschen?")) return;
@@ -124,14 +133,24 @@ export function BirthdayTable({ initialData, existingGroups }: Props) {
           <div key={group.name ?? "__ungrouped"}>
             {group.name && (() => {
               const pal = paletteFor(group.name);
+              const isCollapsed = collapsed.has(group.name);
               return (
-                <div className={`flex items-center gap-2 mb-2 px-1`}>
+                <button
+                  onClick={() => toggleGroup(group.name!)}
+                  className={`flex items-center gap-2 mb-2 px-1 w-full text-left group/hdr`}
+                >
+                  {isCollapsed
+                    ? <ChevronRight className={`h-3.5 w-3.5 ${pal.text}`} />
+                    : <ChevronDown className={`h-3.5 w-3.5 ${pal.text}`} />}
                   <Users className={`h-3.5 w-3.5 ${pal.text}`} />
                   <span className={`text-xs font-bold uppercase tracking-wider ${pal.text}`}>{group.name}</span>
-                </div>
+                  <span className={`ml-1 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${pal.badge}`}>
+                    {group.entries.length}
+                  </span>
+                </button>
               );
             })()}
-            <div className="space-y-3">
+            {!collapsed.has(group.name ?? "") && <div className="space-y-3">
               {group.entries.map((entry) => {
                 const days = daysUntilBirthday(entry.Datum);
                 const isToday = days === 0;
@@ -173,7 +192,7 @@ export function BirthdayTable({ initialData, existingGroups }: Props) {
                   </div>
                 );
               })}
-            </div>
+            </div>}
           </div>
         ))}
       </div>
@@ -200,10 +219,18 @@ export function BirthdayTable({ initialData, existingGroups }: Props) {
               <Fragment key={group.name ?? "__ungrouped"}>
                 {group.name && (() => {
                   const pal = paletteFor(group.name);
+                  const isCollapsed = collapsed.has(group.name);
                   return (
-                    <TableRow key={`header-${group.name}`} className={`${pal.header} border-b border-border/30 hover:bg-transparent`}>
-                      <TableCell colSpan={7} className="pl-6 py-2">
+                    <TableRow
+                      key={`header-${group.name}`}
+                      className={`${pal.header} border-b border-border/30 hover:brightness-95 cursor-pointer select-none`}
+                      onClick={() => toggleGroup(group.name!)}
+                    >
+                      <TableCell colSpan={7} className="pl-4 py-2">
                         <div className="flex items-center gap-2">
+                          {isCollapsed
+                            ? <ChevronRight className={`h-3.5 w-3.5 ${pal.text}`} />
+                            : <ChevronDown className={`h-3.5 w-3.5 ${pal.text}`} />}
                           <Users className={`h-3.5 w-3.5 ${pal.text}`} />
                           <span className={`text-xs font-bold uppercase tracking-wider ${pal.text}`}>{group.name}</span>
                           <span className={`ml-1 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${pal.badge}`}>
@@ -214,7 +241,7 @@ export function BirthdayTable({ initialData, existingGroups }: Props) {
                     </TableRow>
                   );
                 })()}
-                {group.entries.map((entry) => {
+                {!collapsed.has(group.name ?? "") && group.entries.map((entry) => {
                   const days = daysUntilBirthday(entry.Datum);
                   const isToday = days === 0;
                   const pal = group.name ? paletteFor(group.name) : null;
